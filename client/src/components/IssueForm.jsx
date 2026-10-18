@@ -1,12 +1,12 @@
 import { useForm } from 'react-hook-form';
 import { Loader2 } from 'lucide-react';
 import ErrorMessage from './ErrorMessage.jsx';
-import { PRIORITIES, SEVERITIES } from '../utils/constants.js';
+import { CATEGORIES, PRIORITIES, SEVERITIES } from '../utils/constants.js';
 
 // Used for both "create" and "edit". In edit mode the project is fixed (an issue cannot move projects).
-export default function IssueForm({ initial, projects = [], assignable = [], canAssign = false, isEdit = false, onProjectChange, onSubmit, onCancel, serverError }) {
+export default function IssueForm({ initial, projects = [], assignable = [], canAssign = false, isEdit = false, onProjectChange, onSubmit, onCancel, serverError, renderAssist }) {
   const {
-    register, handleSubmit, formState: { errors, isSubmitting },
+    register, handleSubmit, getValues, setValue, watch, formState: { errors, isSubmitting },
   } = useForm({
     defaultValues: {
       title: initial?.title || '',
@@ -15,6 +15,9 @@ export default function IssueForm({ initial, projects = [], assignable = [], can
       severity: initial?.severity || 'Medium',
       priority: initial?.priority || 'Medium',
       assignee: initial?.assignee?._id || '',
+      category: initial?.category || 'Bug',
+      component: initial?.component || '',
+      dueDate: initial?.dueDate ? String(initial.dueDate).slice(0, 10) : '',
     },
   });
 
@@ -33,6 +36,8 @@ export default function IssueForm({ initial, projects = [], assignable = [], can
           {...register('description', { required: 'Description is required', minLength: { value: 5, message: 'Description must be at least 5 characters' }, maxLength: { value: 5000, message: 'Description must be 5000 characters or fewer' } })} />
         {errors.description && <p className="mt-1 text-xs text-red-600">{errors.description.message}</p>}
       </div>
+      {/* Optional helpers (similar issues, AI assistant) supplied by the page; they read and write the same form. */}
+      {renderAssist?.({ getValues, setValue, watch })}
       <div className="grid gap-4 sm:grid-cols-2">
         {!isEdit && (
           <div className="sm:col-span-2">
@@ -52,6 +57,19 @@ export default function IssueForm({ initial, projects = [], assignable = [], can
         <div>
           <label htmlFor="priority" className="label">Priority</label>
           <select id="priority" className="input" {...register('priority')}>{PRIORITIES.map((p) => <option key={p}>{p}</option>)}</select>
+        </div>
+        <div>
+          <label htmlFor="category" className="label">Category</label>
+          <select id="category" className="input" {...register('category')}>{CATEGORIES.map((c) => <option key={c}>{c}</option>)}</select>
+        </div>
+        <div>
+          <label htmlFor="component" className="label">Component (optional)</label>
+          <input id="component" className="input" maxLength={80} placeholder="e.g. Checkout, Login" aria-invalid={Boolean(errors.component)} {...register('component', { maxLength: { value: 80, message: 'Component must be 80 characters or fewer' } })} />
+          {errors.component && <p className="mt-1 text-xs text-red-600">{errors.component.message}</p>}
+        </div>
+        <div>
+          <label htmlFor="dueDate" className="label">Due date (optional)</label>
+          <input id="dueDate" type="date" className="input" {...register('dueDate')} />
         </div>
         {canAssign && !isEdit && (
           <div className="sm:col-span-2">

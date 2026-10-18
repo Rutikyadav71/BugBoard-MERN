@@ -1,3 +1,4 @@
+export const CATEGORIES = ['Bug', 'Feature', 'Improvement'];
 export const STATUSES = ['Open', 'In Progress', 'Testing', 'Resolved', 'Closed'];
 export const PRIORITIES = ['Low', 'Medium', 'High', 'Urgent'];
 export const SEVERITIES = ['Low', 'Medium', 'High', 'Critical'];
@@ -29,6 +30,17 @@ export const CHART_COLORS = {
 export const formatDate = (d) => (d ? new Date(d).toLocaleDateString(undefined, { dateStyle: 'medium' }) : '-');
 export const formatDateTime = (d) => (d ? new Date(d).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : '-');
 
+// Due dates are calendar dates stored at 00:00 UTC. Format in UTC so they never shift a day in other time zones.
+export const formatDueDate = (d) => (d ? new Date(d).toLocaleDateString(undefined, { dateStyle: 'medium', timeZone: 'UTC' }) : '-');
+
+// Overdue = the due date is before TODAY (in the viewer's calendar) and the issue is not finished.
+export function isOverdue(dueDate, status, now = new Date()) {
+  if (!dueDate || ['Resolved', 'Closed'].includes(status)) return false;
+  const pad = (n) => String(n).padStart(2, '0');
+  const today = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+  return String(dueDate).slice(0, 10) < today;
+}
+
 export function timeAgo(d) {
   const s = Math.floor((Date.now() - new Date(d).getTime()) / 1000);
   if (s < 60) return 'just now';
@@ -47,6 +59,9 @@ export function describeActivity(a) {
     case 'assignee_changed': return `changed assignee from ${a.from} to ${a.to}`;
     case 'priority_changed': return `changed priority from ${a.from} to ${a.to}`;
     case 'severity_changed': return `changed severity from ${a.from} to ${a.to}`;
+    case 'category_changed': return `changed category from ${a.from} to ${a.to}`;
+    case 'component_changed': return `changed component from "${a.from || 'none'}" to "${a.to || 'none'}"`;
+    case 'due_date_changed': return `changed due date from ${a.from || 'none'} to ${a.to || 'none'}`;
     case 'title_changed': return `renamed the issue from "${a.from}" to "${a.to}"`;
     case 'description_changed': return 'updated the description';
     default: return 'updated the issue';

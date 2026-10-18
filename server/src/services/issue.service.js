@@ -97,6 +97,9 @@ export async function createIssue(user, input) {
         project: project._id,
         severity: input.severity,
         priority: input.priority,
+        category: input.category,
+        component: input.component,
+        dueDate: input.dueDate ?? null,
         status: 'Open',
         reporter: user._id, // never taken from the request body
         assignee: input.assignee || null,
@@ -168,11 +171,16 @@ export async function updateIssue(user, id, patch) {
   const caps = capabilities(user, issue);
   if (!caps.canEdit) throw AppError.forbidden('You do not have permission to edit this issue');
 
-  const ACTIONS = { title: 'title_changed', description: 'description_changed', severity: 'severity_changed', priority: 'priority_changed' };
+  const ACTIONS = {
+    title: 'title_changed', description: 'description_changed', severity: 'severity_changed', priority: 'priority_changed',
+    category: 'category_changed', component: 'component_changed', dueDate: 'due_date_changed',
+  };
+  // Dates are compared (and logged) as YYYY-MM-DD so re-saving the same day is not a change.
+  const norm = (field, v) => (field === 'dueDate' ? (v ? new Date(v).toISOString().slice(0, 10) : null) : v);
   const changes = [];
   for (const [field, value] of Object.entries(patch)) {
-    if (issue[field] !== value) {
-      changes.push({ field, from: issue[field], to: value });
+    if (norm(field, issue[field]) !== norm(field, value)) {
+      changes.push({ field, from: norm(field, issue[field]), to: norm(field, value) });
       issue[field] = value;
     }
   }

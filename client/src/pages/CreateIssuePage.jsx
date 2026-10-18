@@ -7,6 +7,8 @@ import { getErrorMessage } from '../api/client.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useToast } from '../components/Toast.jsx';
 import IssueForm from '../components/IssueForm.jsx';
+import SimilarIssues from '../components/SimilarIssues.jsx';
+import AiAssistPanel from '../components/AiAssistPanel.jsx';
 import LoadingSpinner from '../components/LoadingSpinner.jsx';
 import ErrorMessage from '../components/ErrorMessage.jsx';
 
@@ -36,7 +38,7 @@ export default function CreateIssuePage() {
 
   const onSubmit = async (values) => {
     setServerError('');
-    const payload = { ...values, assignee: values.assignee || null };
+    const payload = { ...values, assignee: values.assignee || null, component: (values.component || '').trim(), dueDate: values.dueDate || undefined };
     try {
       const issue = await issuesApi.create(payload);
       toast.success(`Issue ${issue.key} created`);
@@ -53,7 +55,13 @@ export default function CreateIssuePage() {
       {projects && projects.length === 0 && <ErrorMessage message="You are not a member of any project yet, so you cannot report issues. Ask an Admin to add you." />}
       {projects && projects.length > 0 && (
         <IssueForm projects={projects} assignable={assignable} canAssign={user.role === 'Admin'} onProjectChange={loadAssignable}
-          onSubmit={onSubmit} onCancel={() => navigate(-1)} serverError={serverError} />
+          onSubmit={onSubmit} onCancel={() => navigate(-1)} serverError={serverError}
+          renderAssist={({ getValues, setValue, watch }) => (
+            <div className="space-y-4">
+              <SimilarIssues projectId={watch('project')} title={watch('title') || ''} description={watch('description') || ''} />
+              <AiAssistPanel projectId={watch('project')} getValues={getValues} setValue={setValue} isAdmin={user.role === 'Admin'} assignable={assignable} />
+            </div>
+          )} />
       )}
     </div>
   );

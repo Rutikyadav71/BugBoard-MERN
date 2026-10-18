@@ -16,10 +16,10 @@ export default function EditIssuePage() {
   const { data: issue, loading, error } = useAsync(() => issuesApi.get(id), [id]);
   const [serverError, setServerError] = useState('');
 
-  const onSubmit = async ({ title, description, severity, priority }) => {
+  const onSubmit = async ({ title, description, severity, priority, category, component, dueDate }) => {
     setServerError('');
     try {
-      await issuesApi.update(id, { title, description, severity, priority });
+      await issuesApi.update(id, { title, description, severity, priority, category, component: (component || '').trim(), dueDate: dueDate || null });
       toast.success('Issue updated');
       navigate(`/issues/${id}`);
     } catch (err) { setServerError(getErrorMessage(err, 'Could not update issue')); }

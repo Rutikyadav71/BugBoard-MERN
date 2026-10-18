@@ -13,7 +13,7 @@ import ActivityTimeline from '../components/ActivityTimeline.jsx';
 import ConfirmationModal from '../components/ConfirmationModal.jsx';
 import LoadingSpinner from '../components/LoadingSpinner.jsx';
 import ErrorMessage from '../components/ErrorMessage.jsx';
-import { formatDateTime } from '../utils/constants.js';
+import { formatDateTime, formatDueDate, isOverdue } from '../utils/constants.js';
 
 const Field = ({ label, children }) => (
   <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 py-2.5"><dt className="text-sm text-slate-500">{label}</dt><dd className="min-w-0 break-words text-right text-sm font-medium text-slate-800">{children}</dd></div>
@@ -112,6 +112,13 @@ export default function IssueDetailPage() {
                     {assignable.map((u) => <option key={u._id} value={u._id}>{u.name}</option>)}
                   </select>
                 ) : (i.assignee?.name || <span className="font-normal text-slate-400">Unassigned</span>)}
+              </Field>
+              <Field label="Category">{i.category || 'Bug'}</Field>
+              {i.component && <Field label="Component">{i.component}</Field>}
+              <Field label="Due date">
+                {i.dueDate ? (
+                  <span className={isOverdue(i.dueDate, i.status) ? 'text-red-600' : ''}>{formatDueDate(i.dueDate)}{isOverdue(i.dueDate, i.status) && ' (overdue)'}</span>
+                ) : <span className="font-normal text-slate-400">Not set</span>}
               </Field>
               <Field label="Created">{formatDateTime(i.createdAt)}</Field>
               <Field label="Updated">{formatDateTime(i.updatedAt)}</Field>

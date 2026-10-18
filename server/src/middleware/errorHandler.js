@@ -45,6 +45,7 @@ export function errorHandler(err, _req, res, _next) {
   res.status(status).json({
     success: false,
     message,
+    ...(typeof err.errorCode === 'string' ? { code: err.errorCode } : {}),
     ...(details ? { errors: details } : {}),
     ...(env.nodeEnv !== 'production' && status >= 500 ? { stack: err.stack } : {}),
   });

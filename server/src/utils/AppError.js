@@ -1,9 +1,10 @@
 export class AppError extends Error {
-  constructor(message, statusCode = 500, details = undefined) {
+  constructor(message, statusCode = 500, details = undefined, errorCode = undefined) {
     super(message);
     this.name = 'AppError';
     this.statusCode = statusCode;
     this.details = details;
+    this.errorCode = errorCode; // stable machine-readable code (e.g. AI_RATE_LIMITED) the UI can branch on
     this.isOperational = true;
     Error.captureStackTrace?.(this, this.constructor);
   }

@@ -1,6 +1,14 @@
 import { z } from 'zod';
 import { objectId, pagination } from './common.js';
-import { SEVERITIES, PRIORITIES, STATUSES } from '../utils/constants.js';
+import { SEVERITIES, PRIORITIES, STATUSES, CATEGORIES } from '../utils/constants.js';
+
+// Accepts YYYY-MM-DD (from <input type="date">) or a full ISO date-time; stored as a Date.
+const dueDate = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}(T.*)?$/, 'Use the format YYYY-MM-DD')
+  .transform((s) => new Date(s.length === 10 ? `${s}T00:00:00.000Z` : s))
+  .refine((d) => !Number.isNaN(d.getTime()), 'Invalid date');
+const component = z.string().trim().max(80, 'Component must be 80 characters or fewer');
 
 const title = z.string({ required_error: 'Title is required' }).trim().min(3, 'Title must be at least 3 characters').max(200);
 const description = z.string({ required_error: 'Description is required' }).trim().min(5, 'Description must be at least 5 characters').max(5000);
@@ -13,6 +21,9 @@ export const createIssueSchema = z.object({
   project: objectId,
   severity: z.enum(SEVERITIES).default('Medium'),
   priority: z.enum(PRIORITIES).default('Medium'),
+  category: z.enum(CATEGORIES).default('Bug'),
+  component: component.default(''),
+  dueDate: dueDate.nullable().optional(),
   assignee: objectId.nullable().optional(),
 });
 
@@ -23,6 +34,9 @@ export const updateIssueSchema = z
     description: description.optional(),
     severity: z.enum(SEVERITIES).optional(),
     priority: z.enum(PRIORITIES).optional(),
+    category: z.enum(CATEGORIES).optional(),
+    component: component.optional(),
+    dueDate: dueDate.nullable().optional(),
   })
   .refine((v) => Object.keys(v).length > 0, { message: 'Provide at least one field to update' });
 
@@ -46,6 +60,15 @@ export const listIssuesQuery = z.object({
   sortBy: z.enum(['createdAt', 'updatedAt', 'priority', 'severity', 'status', 'title']).default('createdAt'),
   order: z.enum(['asc', 'desc']).default('desc'),
   ...pagination,
+});
+
+// Body of POST /issues/similar. Text is optional so the endpoint can be called while a draft is still short.
+export const similarIssuesSchema = z.object({
+  project: objectId,
+  title: z.string().trim().max(200).default(''),
+  description: z.string().trim().max(5000).default(''),
+  excludeIssueId: objectId.optional(),
+  limit: z.coerce.number().int().min(1).max(10).optional(),
 });
 
 export const createCommentSchema = z.object({

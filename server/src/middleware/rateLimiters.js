@@ -13,4 +13,7 @@ export function createAuthLimiter({ max = 20, windowMs = 15 * 60 * 1000 } = {}) 
   });
 }
 
+// Draft-time similarity search runs while the user types (debounced in the client); cap it per IP.
+export const similarLimiter = env.nodeEnv === 'test' ? (_req, _res, next) => next() : createAuthLimiter({ max: 120, windowMs: 60 * 1000 });
+
 export const authLimiter = env.nodeEnv === 'test' ? (_req, _res, next) => next() : createAuthLimiter();
