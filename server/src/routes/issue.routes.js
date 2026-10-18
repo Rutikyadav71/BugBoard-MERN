@@ -3,8 +3,9 @@ import * as c from '../controllers/issue.controller.js';
 import { protect } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 import { idParam } from '../validators/common.js';
+import { similarLimiter } from '../middleware/rateLimiters.js';
 import {
-  createIssueSchema, updateIssueSchema, updateStatusSchema, assignIssueSchema, listIssuesQuery, createCommentSchema,
+  createIssueSchema, updateIssueSchema, updateStatusSchema, assignIssueSchema, listIssuesQuery, createCommentSchema, similarIssuesSchema,
 } from '../validators/issue.validators.js';
 
 const router = Router();
@@ -14,6 +15,8 @@ router.use(protect);
 // (assignee / reporter / current status), not just on the user's role.
 router.get('/', validate(listIssuesQuery, 'query'), c.list);
 router.post('/', validate(createIssueSchema), c.create);
+// Deterministic (no AI call, no quota): finds issues with similar wording in a project the caller belongs to.
+router.post('/similar', similarLimiter, validate(similarIssuesSchema), c.similar);
 router.get('/:id', validate(idParam, 'params'), c.get);
 router.patch('/:id', validate(idParam, 'params'), validate(updateIssueSchema), c.update);
 router.patch('/:id/status', validate(idParam, 'params'), validate(updateStatusSchema), c.setStatus);

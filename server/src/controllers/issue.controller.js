@@ -1,6 +1,7 @@
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { ok, created } from '../utils/response.js';
 import * as issues from '../services/issue.service.js';
+import { findSimilarIssues } from '../services/similar.service.js';
 
 export const create = asyncHandler(async (req, res) => {
   const issue = await issues.createIssue(req.user, req.body);
@@ -11,6 +12,11 @@ export const list = asyncHandler(async (req, res) => {
   const { items, ...meta } = await issues.listIssues(req.user, req.validatedQuery);
   // Per-user capabilities let the UI (e.g. Kanban drag rules) work without one request per issue.
   ok(res, items.map((i) => ({ ...i.toJSON(), capabilities: issues.capabilities(req.user, i) })), { meta });
+});
+
+export const similar = asyncHandler(async (req, res) => {
+  const { items, meta } = await findSimilarIssues(req.user, req.body);
+  ok(res, items, { meta });
 });
 
 export const get = asyncHandler(async (req, res) => ok(res, await issues.getIssue(req.user, req.params.id)));

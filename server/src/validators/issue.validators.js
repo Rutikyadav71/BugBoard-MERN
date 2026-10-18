@@ -62,6 +62,15 @@ export const listIssuesQuery = z.object({
   ...pagination,
 });
 
+// Body of POST /issues/similar. Text is optional so the endpoint can be called while a draft is still short.
+export const similarIssuesSchema = z.object({
+  project: objectId,
+  title: z.string().trim().max(200).default(''),
+  description: z.string().trim().max(5000).default(''),
+  excludeIssueId: objectId.optional(),
+  limit: z.coerce.number().int().min(1).max(10).optional(),
+});
+
 export const createCommentSchema = z.object({
   text: z.string({ required_error: 'Comment text is required' }).trim().min(1, 'Comment cannot be empty').max(2000),
 });
