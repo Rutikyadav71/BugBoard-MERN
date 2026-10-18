@@ -12,7 +12,8 @@
     "test": "npm run test --prefix server && npm run test --prefix client",
     "test:server": "npm run test --prefix server",
     "test:client": "npm run test --prefix client",
-    "build": "npm run build --prefix client"
+    "build": "npm run build --prefix client",
+    "ai:check": "npm run ai:check --prefix server"
   },
   "devDependencies": {
     "concurrently": "^9.0.1"
