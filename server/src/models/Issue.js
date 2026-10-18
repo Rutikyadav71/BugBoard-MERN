@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { SEVERITIES, PRIORITIES, STATUSES } from '../utils/constants.js';
+import { SEVERITIES, PRIORITIES, STATUSES, CATEGORIES } from '../utils/constants.js';
 
 const issueSchema = new mongoose.Schema(
   {
@@ -11,6 +11,10 @@ const issueSchema = new mongoose.Schema(
     severity: { type: String, enum: SEVERITIES, default: 'Medium', required: true },
     priority: { type: String, enum: PRIORITIES, default: 'Medium', required: true },
     status: { type: String, enum: STATUSES, default: 'Open', required: true },
+    // Optional planning fields. Existing issues without them behave as Bug / no component / no due date.
+    category: { type: String, enum: CATEGORIES, default: 'Bug' },
+    component: { type: String, trim: true, maxlength: 80, default: '' },
+    dueDate: { type: Date, default: null },
     reporter: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     assignee: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     // Denormalised numeric ranks (Low=0 ... Critical=3) so lists can sort by logical order using a
@@ -37,6 +41,7 @@ issueSchema.index({ reporter: 1 });
 issueSchema.index({ priority: 1 });
 issueSchema.index({ severity: 1 });
 issueSchema.index({ updatedAt: -1 });
+issueSchema.index({ project: 1, dueDate: 1 }); // overdue lookups
 issueSchema.index({ title: 'text', description: 'text' });
 
 issueSchema.set('toJSON', {
