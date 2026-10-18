@@ -90,7 +90,8 @@ export default function BoardPage() {
   const hasFilters = Object.values(filters).some(Boolean) || search;
 
   return (
-    <div className="flex h-full min-w-0 flex-col space-y-4">
+    <div className="flex h-full min-h-0 min-w-0 flex-col gap-4">
+      <div className="max-h-[45dvh] shrink-0 space-y-4 overflow-y-auto sm:max-h-none sm:overflow-visible">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div><h1 className="text-2xl font-bold text-slate-900">Kanban board</h1><p className="text-sm text-slate-500">Drag cards between columns to update their status</p></div>
         <Link to="/issues/new" className="btn-primary"><Plus size={16} /> New issue</Link>
@@ -98,6 +99,7 @@ export default function BoardPage() {
 
       <div className="w-full max-w-sm"><SearchBar value={search} onSearch={onSearch} placeholder="Search the board…" /></div>
       <FilterPanel filters={filters} onChange={update} onClear={() => setParams(new URLSearchParams())} projects={projects} people={people} show={FILTER_KEYS} />
+      </div>
 
       {loading && <LoadingSpinner />}
       {error && <div className="space-y-2"><ErrorMessage message={error} /><button type="button" className="btn-secondary" onClick={load}>Try again</button></div>}
@@ -107,7 +109,8 @@ export default function BoardPage() {
 
       {!loading && !error && issues.length > 0 && (
         <DragDropContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
-          <div className="flex w-full min-w-0 snap-x snap-proximity gap-4 overflow-x-auto overscroll-x-contain pb-4 [-webkit-overflow-scrolling:touch]" data-testid="board">
+          <div className="min-h-0 w-full min-w-0 flex-1 snap-x snap-proximity overflow-auto overscroll-contain [-webkit-overflow-scrolling:touch]" data-testid="board">
+          <div className="flex min-h-full w-max min-w-full gap-4 pb-2">
             {STATUSES.map((status) => {
               const droppable = draggingFrom && (status === draggingFrom.status || draggingFrom.capabilities?.allowedTransitions?.includes(status));
               const dim = draggingFrom && !droppable;
@@ -137,6 +140,7 @@ export default function BoardPage() {
                 </section>
               );
             })}
+          </div>
           </div>
         </DragDropContext>
       )}
